@@ -15,7 +15,7 @@ ofxUST::ofxUST()
 
 // open
 //----------------------------------------
-void ofxUST::open()
+void ofxUST::open(std::string deviceIp, int port)
 {
   bConnected = urg.open( deviceIp.c_str(), port, Urg_driver::Ethernet );
   
