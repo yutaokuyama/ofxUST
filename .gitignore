@@ -24,5 +24,23 @@ obj
 *.exp
 *.iobj
 *.ipdb
-*.pdb
+
+
 # common
+
+#########################
+# miscellaneous
+#########################
+
+.mailmap
+runLogs/
+recordings/
+noGit/
+*.mov
+*.m4v
+*.avi
+*.mp4
+*.zip
+git_no/
+urg_library-1.2.5/
+*.pdb

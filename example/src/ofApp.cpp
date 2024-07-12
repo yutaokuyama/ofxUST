@@ -54,9 +54,11 @@ void ofApp::draw()
   ofPopMatrix();
 
   ofSetColor(255);
-  ofDrawBitmapString("Direction [arrow] : " + ofToString((int)ust.getDirection()), 20, 40);
-  ofDrawBitmapString("Mirror    [m]     : " + ofToString(bMirror), 20, 60);
-  ofDrawBitmapString("FPS               : " + ofToString(ofGetFrameRate(), 1), 20, 80);
+  int temp_y = 0;
+  ofDrawBitmapString("Direction [arrow] : " + ofToString((int)ust.getDirection()), 20, temp_y += 15);
+  ofDrawBitmapString("Mirror    [m]     : " + ofToString(bMirror), 20, temp_y += 15);
+  ofDrawBitmapString("FPS               : " + ofToString(ofGetFrameRate(), 1), 20, temp_y += 15);
+  ofDrawBitmapString("line amt       : " + ofToString(ust.coordinates.size()), 20, temp_y += 15);
 }
 
 void ofApp::mouseScrolled(int _x, int _y, float _scrollX, float _scrollY)
