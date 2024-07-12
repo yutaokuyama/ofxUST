@@ -1,15 +1,10 @@
 #include "ofxUST.h"
 #include "ofAppRunner.h"
 
-
 // ofxUST
 //----------------------------------------
 ofxUST::ofxUST()
-: direction( DIRECTION_DOWN )
-, bMirror( false )
-, time( 0.0 )
-, lastCheckTime( 0.0 )
-, checkInterval( 1.0 )
+    : direction(DIRECTION_DOWN), bMirror(false), time(0.0), lastCheckTime(0.0), checkInterval(1.0)
 {
 }
 
@@ -17,9 +12,9 @@ ofxUST::ofxUST()
 //----------------------------------------
 void ofxUST::open(std::string deviceIp, int port)
 {
-  bConnected = urg.open( deviceIp.c_str(), port, Urg_driver::Ethernet );
-  
-  if( bConnected )
+  bConnected = urg.open(deviceIp.c_str(), port, Urg_driver::Ethernet);
+
+  if (bConnected)
   {
     ofLog() << "[ofxUST::open] succeeded" << std::endl
             << "  info" << std::endl
@@ -41,14 +36,14 @@ void ofxUST::open(std::string deviceIp, int port)
 
 // setDirection
 //----------------------------------------
-void ofxUST::setDirection( ofxUST::Direction _dir )
+void ofxUST::setDirection(ofxUST::Direction _dir)
 {
   direction = _dir;
 }
 
 // setMirror
 //----------------------------------------
-void ofxUST::setMirror( bool _b )
+void ofxUST::setMirror(bool _b)
 {
   bMirror = _b;
 }
@@ -97,29 +92,29 @@ bool ofxUST::isConnected()
 
 // setScanningParameterBySteps
 //----------------------------------------
-void ofxUST::setScanningParameterBySteps( int _minStep, int _maxStep, int _skipStep )
+void ofxUST::setScanningParameterBySteps(int _minStep, int _maxStep, int _skipStep)
 {
   minStep = _minStep;
   maxStep = _maxStep;
-  skip    = _skipStep;
-  
-  if( bConnected )
+  skip = _skipStep;
+
+  if (bConnected)
   {
-    urg.set_scanning_parameter( _minStep, _maxStep, _skipStep );
+    urg.set_scanning_parameter(_minStep, _maxStep, _skipStep);
   }
 }
 
 // setScanningParameterByAngles
 //----------------------------------------
-void ofxUST::setScanningParameterByAngles( float _minAngle, float _maxAngle, int _skipStep )
+void ofxUST::setScanningParameterByAngles(float _minAngle, float _maxAngle, int _skipStep)
 {
   minAngle = _minAngle;
   maxAngle = _maxAngle;
-  skip     = _skipStep;
-  
-  if( bConnected )
+  skip = _skipStep;
+
+  if (bConnected)
   {
-    urg.set_scanning_parameter( urg.deg2step( _minAngle ), urg.deg2step( _maxAngle ), _skipStep );
+    urg.set_scanning_parameter(urg.deg2step(_minAngle), urg.deg2step(_maxAngle), _skipStep);
   }
 }
 
@@ -127,9 +122,9 @@ void ofxUST::setScanningParameterByAngles( float _minAngle, float _maxAngle, int
 //----------------------------------------
 void ofxUST::startMeasurement()
 {
-  if( bConnected )
+  if (bConnected)
   {
-    urg.start_measurement( Urg_driver::Distance, Urg_driver::Infinity_times, 0 );
+    urg.start_measurement(Urg_driver::Distance, Urg_driver::Infinity_times, 0);
   }
 }
 
@@ -137,7 +132,7 @@ void ofxUST::startMeasurement()
 //----------------------------------------
 void ofxUST::stopMeasurement()
 {
-  if( bConnected )
+  if (bConnected)
   {
     urg.stop_measurement();
   }
@@ -149,53 +144,54 @@ void ofxUST::update()
 {
   time += ofGetLastFrameTime();
 
-  if( !bConnected )
+  if (!bConnected)
   {
-    if( time > lastCheckTime + checkInterval )
+    if (time > lastCheckTime + checkInterval)
     {
       // try re-open
       open();
-      if( bConnected )
+      if (bConnected)
       {
-        setScanningParameterByAngles( minAngle, maxAngle, skip );
+        setScanningParameterByAngles(minAngle, maxAngle, skip);
         startMeasurement();
       }
       lastCheckTime = time;
     }
     return;
   }
-  
+
   long time_stamp = 0;
-  
+
   // error
-  if( !urg.get_distance( data, &time_stamp ) )
+  if (!urg.get_distance(data, &time_stamp))
   {
     ofLog() << "[ofxUST::update][Urg_driver::get_distance()] " << urg.what();
-    
+
     close();
     bConnected = false;
     return;
   }
-  
+
   long min_distance = urg.min_distance();
   long max_distance = urg.max_distance();
-  size_t nData      = data.size();
-  
+  size_t nData = data.size();
+
   coordinates.clear();
-  
-  for( size_t i = 0; i < nData; i += skip )
+
+  for (size_t i = 0; i < nData; i += skip)
   {
-    int idx = ( bMirror ) ? ( nData - 1 ) - i : i;
-    
-    long l  = data.at( i );
-    
-    if( ( l < min_distance ) || ( l > max_distance ) ) continue;
-    
-    double radian = urg.index2rad( idx ) + ( ( int )direction * HALF_PI );
-    long   x      = ( long )( cos( radian ) * l );
-    long   y      = ( long )( sin( radian ) * l );
-    
-    coordinates.push_back( ofVec2f( x, y ) );
+    int idx = (bMirror) ? (nData - 1) - i : i;
+
+    long l = data.at(i);
+
+    if ((l < min_distance) || (l > max_distance))
+      continue;
+
+    double radian = urg.index2rad(idx) + ((int)direction * HALF_PI);
+    long x = (long)(cos(radian) * l);
+    long y = (long)(sin(radian) * l);
+
+    coordinates.push_back(ofVec2f(x, y));
   }
 }
 
@@ -203,7 +199,7 @@ void ofxUST::update()
 //----------------------------------------
 void ofxUST::close()
 {
-  if( bConnected )
+  if (bConnected)
   {
     urg.close();
   }

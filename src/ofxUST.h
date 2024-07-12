@@ -5,14 +5,13 @@
 
 using namespace qrk;
 
-
 // ofUST
 //----------------------------------------
 class ofxUST
 {
 public:
   ofxUST();
-  
+
   enum Direction
   {
     DIRECTION_RIGHT = 0,
@@ -22,46 +21,44 @@ public:
     DIRECTION_SIZE
   };
 
-  void open(std::string deviceIp="192.168.0.10", int port=10940);
-  
-  void setDirection( Direction _dir );
-  void setMirror( bool _b );
-  
-  void setScanningParameterBySteps( int _minStep, int _maxStep, int _skipStep );
-  void setScanningParameterByAngles( float _minAngle, float _maxAngle, int _skipStep );
-  
+  void open(std::string deviceIp = "192.168.0.10", int port = 10940);
+
+  void setDirection(Direction _dir);
+  void setMirror(bool _b);
+
+  void setScanningParameterBySteps(int _minStep, int _maxStep, int _skipStep);
+  void setScanningParameterByAngles(float _minAngle, float _maxAngle, int _skipStep);
+
   Direction getDirection();
-  
-  int  getMinDistance();
-  int  getMaxDistance();
-  
-  int  getMinStep();
-  int  getMaxStep();
-  
+
+  int getMinDistance();
+  int getMaxDistance();
+
+  int getMinStep();
+  int getMaxStep();
+
   bool isConnected();
-  
+
   void startMeasurement();
   void stopMeasurement();
-  
-  void update();
-  
-  void close();
-  
-  std::vector< long >    data;
-  std::vector< ofVec2f > coordinates;
-  
-private:
 
-  
+  void update();
+
+  void close();
+
+  std::vector<long> data;
+  std::vector<ofVec2f> coordinates;
+
+private:
   Urg_driver urg;
-  bool       bConnected;
-  
-  int        minStep, maxStep;
-  float      minAngle, maxAngle;
-  int        skip;
-  
-  Direction  direction;
-  bool       bMirror;
+  bool bConnected;
+
+  int minStep, maxStep;
+  float minAngle, maxAngle;
+  int skip;
+
+  Direction direction;
+  bool bMirror;
 
   float time;
   float checkInterval;
