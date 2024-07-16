@@ -19,7 +19,8 @@ namespace qrk
     class Urg_driver : public Lidar
     {
     public:
-        enum {
+        enum
+        {
             Default_baudrate = 115200,
             Default_port = 10940,
             Infinity_times = -1,
@@ -29,11 +30,11 @@ namespace qrk
         virtual ~Urg_driver(void);
 
         static std::vector<std::string> find_ports(void);
-        static std::vector<std::string> find_ports(std::vector<int>&
-                                                   is_urg_ports);
-        const char* what(void) const;
+        static std::vector<std::string> find_ports(std::vector<int> &
+                                                       is_urg_ports);
+        const char *what(void) const;
 
-        bool open(const char* device_name, long baudrate = Default_baudrate,
+        bool open(const char *device_name, long baudrate = Default_baudrate,
                   connection_type_t type = Serial);
         void close(void);
         bool is_open(void) const;
@@ -57,25 +58,25 @@ namespace qrk
         void set_ignore_checkSumError(bool ignore = true);
 
         //!  Receives measurement data
-        bool get_distance(std::vector<long>& data, long *time_stamp = NULL);
-        bool get_distance_intensity(std::vector<long>& data,
-                                    std::vector<unsigned short>& intensity,
+        bool get_distance(std::vector<long> &data, long *time_stamp = NULL);
+        bool get_distance_intensity(std::vector<long> &data,
+                                    std::vector<unsigned short> &intensity,
                                     long *time_stamp = NULL);
 
-		bool get_distance_io(std::vector<long>& data, std::vector<long>& io, long *time_stamp = NULL);
+        bool get_distance_io(std::vector<long> &data, std::vector<long> &io, long *time_stamp = NULL);
 
-		bool get_distance_intensity_io(std::vector<long>& data,
-			                           std::vector<unsigned short>& intensity,
-			                           std::vector<long>& io,
-			                           long *time_stamp = NULL);
+        bool get_distance_intensity_io(std::vector<long> &data,
+                                       std::vector<unsigned short> &intensity,
+                                       std::vector<long> &io,
+                                       long *time_stamp = NULL);
 
-        bool get_multiecho(std::vector<long>& data_multi,
-                           long* time_stamp = NULL);
+        bool get_multiecho(std::vector<long> &data_multi,
+                           long *time_stamp = NULL);
 
-        bool get_multiecho_intensity(std::vector<long>& data_multiecho,
-                                     std::vector<unsigned short>&
-                                     intensity_multiecho,
-                                     long* time_stamp = NULL);
+        bool get_multiecho_intensity(std::vector<long> &data_multiecho,
+                                     std::vector<unsigned short> &
+                                         intensity_multiecho,
+                                     long *time_stamp = NULL);
 
         bool set_scanning_parameter(int first_step, int last_step,
                                     int skip_step = 1);
@@ -107,23 +108,23 @@ namespace qrk
         long scan_usec(void) const;
         int max_data_size(void) const;
         int max_echo_size(void) const;
-		int max_io_size(void) const;
+        int max_io_size(void) const;
 
-        const char* product_type(void) const;
-        const char* firmware_version(void) const;
-        const char* serial_id(void) const;
-        const char* status(void) const;
-        const char* state(void) const;
+        const char *product_type(void) const;
+        const char *firmware_version(void) const;
+        const char *serial_id(void) const;
+        const char *status(void) const;
+        const char *state(void) const;
 
-        int raw_write(const char* data, size_t data_size);
-        int raw_read(char* data, size_t max_data_size, int timeout);
-        int raw_readline(char* data, size_t max_data_size, int timeout);
-        void* raw_urg(void);
+        int raw_write(const char *data, size_t data_size);
+        int raw_read(char *data, size_t max_data_size, int timeout);
+        int raw_readline(char *data, size_t max_data_size, int timeout);
+        void *raw_urg(void);
         void set_measurement_type(measurement_type_t type);
 
     private:
-        Urg_driver(const Urg_driver& rhs);
-        Urg_driver& operator = (const Urg_driver& rhs);
+        Urg_driver(const Urg_driver &rhs);
+        Urg_driver &operator=(const Urg_driver &rhs);
 
         struct pImpl;
         std::unique_ptr<pImpl> pimpl;
