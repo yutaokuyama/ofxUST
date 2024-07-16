@@ -10,57 +10,65 @@ using namespace qrk;
 class ofxUST
 {
 public:
-  ofxUST();
+    ofxUST(std::string deviceIp = "192.168.0.10", int port = 10940,float checkInterval = 1.0);
 
-  enum Direction
-  {
-    DIRECTION_RIGHT = 0,
-    DIRECTION_DOWN,
-    DIRECTION_LEFT,
-    DIRECTION_UP,
-    DIRECTION_SIZE
-  };
+    enum Direction
+    {
+        DIRECTION_RIGHT = 0,
+        DIRECTION_DOWN,
+        DIRECTION_LEFT,
+        DIRECTION_UP,
+        DIRECTION_SIZE
+    };
 
-  void open(std::string deviceIp = "192.168.0.10", int port = 10940);
+    void open();
 
-  void setDirection(Direction _dir);
-  void setMirror(bool _b);
+    void setDirection(Direction _dir);
+    void setMirror(bool _b);
 
-  void setScanningParameterBySteps(int _minStep, int _maxStep, int _skipStep);
-  void setScanningParameterByAngles(float _minAngle, float _maxAngle, int _skipStep);
+    void setScanningParameterBySteps(int _minStep, int _maxStep, int _skipStep);
+    void setScanningParameterByAngles(float _minAngle, float _maxAngle, int _skipStep);
 
-  Direction getDirection();
+    Direction getDirection();
 
-  int getMinDistance();
-  int getMaxDistance();
+    int getMinDistance();
+    int getMaxDistance();
 
-  int getMinStep();
-  int getMaxStep();
+    int getMinStep();
+    int getMaxStep();
 
-  bool isConnected();
+    bool isConnected();
 
-  void startMeasurement();
-  void stopMeasurement();
+    void startMeasurement();
+    void stopMeasurement();
 
-  void update();
+    void update();
 
-  void close();
+    void close();
 
-  std::vector<long> data;
-  std::vector<ofVec2f> coordinates;
+    const std::vector<ofVec2f>& getCoordinates();
+
+
+
 
 private:
-  Urg_driver urg;
-  bool bConnected;
+    Urg_driver urg;
+    bool bConnected;
+    std::vector<ofVec2f> coordinates;
+    std::vector<long> data;
 
-  int minStep, maxStep;
-  float minAngle, maxAngle;
-  int skip;
 
-  Direction direction;
-  bool bMirror;
+    int minStep, maxStep;
+    float minAngle, maxAngle;
+    int skip;
 
-  float time;
-  float checkInterval;
-  float lastCheckTime;
+    Direction direction;
+    bool bMirror;
+
+    float time = 0.0;
+    const float checkInterval;
+    const string deviceIp;
+    const int port;
+    float lastCheckTime = 0.0;
+    
 };

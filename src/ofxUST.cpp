@@ -3,14 +3,14 @@
 
 // ofxUST
 //----------------------------------------
-ofxUST::ofxUST()
-    : direction(DIRECTION_DOWN), bMirror(false), time(0.0), lastCheckTime(0.0), checkInterval(1.0)
+ofxUST::ofxUST(std::string deviceIp, int port, float checkInterval)
+    : deviceIp(deviceIp), port(port), direction(DIRECTION_DOWN), bMirror(false), checkInterval(checkInterval)
 {
 }
 
 // open
 //----------------------------------------
-void ofxUST::open(std::string deviceIp, int port)
+void ofxUST::open()
 {
   bConnected = urg.open(deviceIp.c_str(), port, Urg_driver::Ethernet);
 
@@ -161,7 +161,6 @@ void ofxUST::update()
   }
 
   long time_stamp = 0;
-
   // error
   if (!urg.get_distance(data, &time_stamp))
   {
@@ -193,6 +192,11 @@ void ofxUST::update()
 
     coordinates.push_back(ofVec2f(x, y));
   }
+}
+
+const std::vector<ofVec2f> &ofxUST::getCoordinates()
+{
+  return coordinates;
 }
 
 // close
