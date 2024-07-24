@@ -78,18 +78,18 @@ public:
 
 		for (int i = 0; i < coordinates.size(); ++i)
 		{
-			glm::vec3 scaledPositoin;
+			glm::vec3 scaledPosition;
 			if (gauss)
 			{
-				scaledPositoin = glm::vec3(filteredCoordinates.at(i).x, filteredCoordinates.at(i).y, 0.0) * scale;
+				scaledPosition = glm::vec3(filteredCoordinates.at(i).x, filteredCoordinates.at(i).y, 0.0) * scale;
 			}
 			else
 			{
 
-				scaledPositoin = glm::vec3(coordinates.at(i).x, coordinates.at(i).y, 1.0) * scale;
+				scaledPosition = glm::vec3(coordinates.at(i).x, coordinates.at(i).y, 1.0) * scale;
 			}
 
-			glm::vec3 ofsettedPosition = glm::vec3(scaledPositoin.x + (ofGetWidth() / 2), scaledPositoin.y + (ofGetHeight() / 2), 0.0);
+			glm::vec3 ofsettedPosition = glm::vec3(scaledPosition.x + (ofGetWidth() / 2), scaledPosition.y + (ofGetHeight() / 2), 0.0);
 
 			mesh.addVertex(ofsettedPosition);
 		}
@@ -103,9 +103,9 @@ public:
 
 		for (int i = 0; i < coordinates.size(); ++i)
 		{
-			glm::vec3 scaledPositoin = glm::vec3(coordinates.at(i).x, coordinates.at(i).y, 1.0) * scale;
+			glm::vec3 scaledPosition = glm::vec3(coordinates.at(i).x, coordinates.at(i).y, 1.0) * scale;
 
-			glm::vec3 ofsettedPosition = glm::vec3(scaledPositoin.x + (ofGetWidth() / 2), scaledPositoin.y + (ofGetHeight() / 2), 0.0);
+			glm::vec3 ofsettedPosition = glm::vec3(scaledPosition.x + (ofGetWidth() / 2), scaledPosition.y + (ofGetHeight() / 2), 0.0);
 			cv::Mat urgPosMat = (cv::Mat_<double>(3, 1) << (double)ofsettedPosition.x, (double)ofsettedPosition.y, 1.0);
 
 			cv::Mat unityPosMat = mat * urgPosMat;
