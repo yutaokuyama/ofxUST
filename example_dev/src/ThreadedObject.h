@@ -18,7 +18,6 @@ public:
 	{
 		ust = std::make_unique<ofxUST>("192.168.1.20");
 
-
 		bool isConnectionFailed = !(ust->open());
 		if (isConnectionFailed)
 		{
@@ -48,37 +47,48 @@ public:
 			ust->update();
 			std::unique_lock<std::mutex> lock(mutex);
 			coordinates = ust->getCoordinates();
+			distances = ust->getDistances();
 			condition.wait(lock);
 		}
 	}
 
-	void update(glm::vec2 thresh,bool gauss = false)
+	void update(glm::vec2 thresh, bool gauss = false)
 	{
 		std::unique_lock<std::mutex> lock(mutex);
 		mesh.clear();
-		// GaussianƒJ[ƒlƒ‹‚Ì¶¬
+		// Gaussianï¿½Jï¿½[ï¿½lï¿½ï¿½ï¿½Ìï¿½ï¿½ï¿½
 		int kernelSize = 5;
 		double sigma = 2.0;
 		std::vector<double> gaussianKernel = createGaussianKernel(kernelSize, sigma);
 
-		// À•Wƒf[ƒ^‚ÌƒtƒBƒ‹ƒ^ƒŠƒ“ƒO
+		// ï¿½ï¿½ï¿½Wï¿½fï¿½[ï¿½^ï¿½Ìƒtï¿½Bï¿½ï¿½ï¿½^ï¿½ï¿½ï¿½ï¿½ï¿½O
 		std::vector<glm::vec2> filteredCoordinates = applyGaussianFilter(coordinates, gaussianKernel);
 
+		// float searchRadius = 1.0f; // ï¿½ï¿½ï¿½a1.0ï¿½ÅƒNï¿½ï¿½ï¿½Xï¿½^ï¿½ï¿½ï¿½ï¿½ï¿½O
+		// std::vector<std::vector<glm::vec2>> clusters = clusterPoints(filteredCoordinates, searchRadius);
+
+		//// ï¿½Nï¿½ï¿½ï¿½Xï¿½^ï¿½ï¿½ï¿½ï¿½ï¿½Oï¿½ï¿½ï¿½Ê‚Ì•\ï¿½ï¿½
+		// for (const auto& cluster : clusters) {
+		//	std::cout << "Cluster:\n";
+		//	for (const auto& point : cluster) {
+		//		std::cout << "(" << point.x << ", " << point.y << ")\n";
+		//	}
+		//	std::cout << std::endl;
+		// }
 
 		for (int i = 0; i < coordinates.size(); ++i)
 		{
 			glm::vec3 scaledPositoin;
-			if (gauss) {
+			if (gauss)
+			{
 				scaledPositoin = glm::vec3(filteredCoordinates.at(i).x, filteredCoordinates.at(i).y, 0.0) * scale;
-
 			}
-			else {
+			else
+			{
 
 				scaledPositoin = glm::vec3(coordinates.at(i).x, coordinates.at(i).y, 1.0) * scale;
-
 			}
 
-			
 			glm::vec3 ofsettedPosition = glm::vec3(scaledPositoin.x + (ofGetWidth() / 2), scaledPositoin.y + (ofGetHeight() / 2), 0.0);
 
 			mesh.addVertex(ofsettedPosition);
@@ -86,12 +96,10 @@ public:
 		condition.notify_all();
 	}
 
-
 	void update(glm::vec2 thresh, cv::Mat mat)
 	{
 		std::unique_lock<std::mutex> lock(mutex);
 		mesh.clear();
-
 
 		for (int i = 0; i < coordinates.size(); ++i)
 		{
@@ -100,7 +108,7 @@ public:
 			glm::vec3 ofsettedPosition = glm::vec3(scaledPositoin.x + (ofGetWidth() / 2), scaledPositoin.y + (ofGetHeight() / 2), 0.0);
 			cv::Mat urgPosMat = (cv::Mat_<double>(3, 1) << (double)ofsettedPosition.x, (double)ofsettedPosition.y, 1.0);
 
-			cv::Mat unityPosMat  = mat * urgPosMat;
+			cv::Mat unityPosMat = mat * urgPosMat;
 
 			mesh.addVertex(glm::vec3((unityPosMat.at<double>(0)), unityPosMat.at<double>(1), 0.0));
 		}
@@ -108,7 +116,6 @@ public:
 	}
 	void updateWithMat()
 	{
-
 	}
 
 	void draw()
@@ -117,10 +124,10 @@ public:
 			ofSetColor(120);
 			mesh.draw();
 		}
-
 	}
 
-	void drawDebugInfo() {
+	void drawDebugInfo()
+	{
 		ofSetColor(255);
 		int temp_y = 0;
 		ofDrawBitmapString("Direction [arrow] : " + ofToString((int)ust->getDirection()), 20, temp_y += 15);
@@ -128,52 +135,58 @@ public:
 		ofDrawBitmapString("line amt       : " + ofToString(ust->getCoordinates().size()), 20, temp_y += 15);
 	}
 
-	std::vector<ofVec2f> getCoordinate() {
+	std::vector<glm::vec2> getCoordinate()
+	{
 
 		return coordinates;
 	}
 
-
-
-
-	std::vector<double> createGaussianKernel(int kernelSize, double sigma) {
+	std::vector<double> createGaussianKernel(int kernelSize, double sigma)
+	{
 		std::vector<double> kernel(kernelSize);
 		double sum = 0.0;
 		int halfSize = kernelSize / 2;
 
-		for (int i = -halfSize; i <= halfSize; ++i) {
+		for (int i = -halfSize; i <= halfSize; ++i)
+		{
 			kernel[i + halfSize] = std::exp(-0.5 * std::pow(i / sigma, 2)) / (sigma * std::sqrt(2 * 3.14));
 			sum += kernel[i + halfSize];
 		}
 
-		// ƒJ[ƒlƒ‹‚Ì³‹K‰»
-		for (double& value : kernel) {
+		// ï¿½Jï¿½[ï¿½lï¿½ï¿½ï¿½Ìï¿½ï¿½Kï¿½ï¿½
+		for (double &value : kernel)
+		{
 			value /= sum;
 		}
 
 		return kernel;
 	}
 
-	// À•Wƒf[ƒ^‚ÌƒtƒBƒ‹ƒ^ƒŠƒ“ƒO
-	std::vector<glm::vec2> applyGaussianFilter(std::vector<ofVec2f>& coordinates,  std::vector<double>& kernel) {
+	// ï¿½ï¿½ï¿½Wï¿½fï¿½[ï¿½^ï¿½Ìƒtï¿½Bï¿½ï¿½ï¿½^ï¿½ï¿½ï¿½ï¿½ï¿½O
+	std::vector<glm::vec2> applyGaussianFilter(std::vector<glm::vec2> &coordinates, std::vector<double> &kernel)
+	{
 		int dataSize = coordinates.size();
 		int kernelSize = kernel.size();
 		int halfKernelSize = kernelSize / 2;
 		std::vector<glm::vec2> filteredData(dataSize, glm::vec2(0.0));
 
-		for (int i = 0; i < dataSize; ++i) {
+		for (int i = 0; i < dataSize; ++i)
+		{
 			double sumX = 0.0;
 			double sumY = 0.0;
 
-			for (int j = -halfKernelSize; j <= halfKernelSize; ++j) {
+			for (int j = -halfKernelSize; j <= halfKernelSize; ++j)
+			{
 				int dataIndex = i + j;
 
-				// ‹«ŠEğŒ‚Ìˆ—
-				if (dataIndex < 0) {
-					dataIndex = 0; // ƒ[ƒƒpƒfƒBƒ“ƒO
+				// ï¿½ï¿½ï¿½Eï¿½ï¿½ï¿½ï¿½ï¿½Ìï¿½ï¿½ï¿½
+				if (dataIndex < 0)
+				{
+					dataIndex = 0; // ï¿½[ï¿½ï¿½ï¿½pï¿½fï¿½Bï¿½ï¿½ï¿½O
 				}
-				else if (dataIndex >= dataSize) {
-					dataIndex = dataSize - 1; // ƒ[ƒƒpƒfƒBƒ“ƒO
+				else if (dataIndex >= dataSize)
+				{
+					dataIndex = dataSize - 1; // ï¿½[ï¿½ï¿½ï¿½pï¿½fï¿½Bï¿½ï¿½ï¿½O
 				}
 
 				sumX += coordinates[dataIndex].x * kernel[j + halfKernelSize];
@@ -186,11 +199,59 @@ public:
 		return filteredData;
 	}
 
+	float calculateDistance(const glm::vec2 &p1, const glm::vec2 &p2)
+	{
+		return glm::length(p1 - p2);
+	}
+
+	// ï¿½Å‹ß–Tï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pï¿½ï¿½ï¿½ï¿½ï¿½_ï¿½ÌƒOï¿½ï¿½ï¿½[ï¿½vï¿½ï¿½
+	std::vector<std::vector<glm::vec2>> clusterPoints(const std::vector<glm::vec2> &points, float radius)
+	{
+		std::vector<bool> visited(points.size(), false);
+		std::vector<std::vector<glm::vec2>> clusters;
+
+		for (size_t i = 0; i < points.size(); ++i)
+		{
+			if (visited[i])
+				continue;
+
+			std::vector<glm::vec2> cluster;
+			std::vector<size_t> toVisit;
+			toVisit.push_back(i);
+
+			while (!toVisit.empty())
+			{
+				size_t index = toVisit.back();
+				toVisit.pop_back();
+				if (visited[index])
+					continue;
+
+				visited[index] = true;
+				cluster.push_back(points[index]);
+
+				// ï¿½ï¿½ï¿½aï¿½ï¿½ï¿½Ì‹ß–Tï¿½_ï¿½ï¿½Tï¿½ï¿½
+				for (size_t j = 0; j < points.size(); ++j)
+				{
+					if (!visited[j] && calculateDistance(points[index], points[j]) <= radius)
+					{
+						toVisit.push_back(j);
+					}
+				}
+			}
+
+			clusters.push_back(cluster);
+		}
+
+		return clusters;
+	}
+
 private:
 	std::unique_ptr<ofxUST> ust;
 	float scale = 0.15;
 	ofVboMesh mesh;
-	std::vector<ofVec2f> coordinates;
+	std::vector<glm::vec2> coordinates;
+	std::vector<glm::vec2> filteredCoordinates;
+	std::vector<float> distances;
 
 protected:
 	std::condition_variable condition;
