@@ -94,30 +94,27 @@ public:
 			mesh.addColor(ofColor(255, 255, isPointInside ? 255 : 0));
 			// validPoints.push_back(deviceCoordinate);
 		}
-		if (validPoints.size() > 300) {
+		if (validPoints.size() > 300)
+		{
 			return;
 		}
 		std::vector<std::vector<glm::vec2>> clusters = clusterPoints(validPoints, searchRadius);
 
-
-		for (const auto& cluster : clusters)
+		for (const auto &cluster : clusters)
 		{
 			std::cout << cluster.size() << std::endl;
-			if (cluster.size() < 6) {
+			if (cluster.size() < 6)
+			{
 				continue;
 			}
 
-		for (const auto& point : cluster)
+			for (const auto &point : cluster)
 			{
 				clusterMesh.addVertex(glm::vec3(point, 1.0));
-				clusterMesh.addColor(ofColor(0,0,255));
-
+				clusterMesh.addColor(ofColor(0, 0, 255));
 			}
 		}
 		std::cout << "momo" << std::endl;
-
-
-
 
 		// Gaussian�J�[�l���̐���
 
