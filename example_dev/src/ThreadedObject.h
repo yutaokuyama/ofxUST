@@ -30,6 +30,7 @@ public:
 		ust->startMeasurement();
 
 		mesh.setMode(OF_PRIMITIVE_POINTS);
+		clusterMesh.setMode(OF_PRIMITIVE_POINTS);
 		startThread();
 	}
 
@@ -52,70 +53,99 @@ public:
 		}
 	}
 
-	void update(glm::vec2 thresh, bool gauss = false)
+	void filterGauss()
 	{
-		std::unique_lock<std::mutex> lock(mutex);
-		mesh.clear();
-		// Gaussian�J�[�l���̐���
 		int kernelSize = 5;
 		double sigma = 2.0;
 		std::vector<double> gaussianKernel = createGaussianKernel(kernelSize, sigma);
 
-		// ���W�f�[�^�̃t�B���^�����O
-		std::vector<glm::vec2> filteredCoordinates = applyGaussianFilter(coordinates, gaussianKernel);
+		std::unique_lock<std::mutex> lock(mutex);
+		filteredCoordinates = applyGaussianFilter(coordinates, gaussianKernel);
+		condition.notify_all();
+	}
+
+	glm::vec2 scaleToDeviceCoordinate(glm::vec2 &coordinates)
+	{
+		glm::vec2 scaledPosition = glm::vec2(coordinates.x, coordinates.y) * scale;
+		glm::vec2 offsettedPosition = glm::vec2(scaledPosition.x + (ofGetWidth() / 2), scaledPosition.y + (ofGetHeight() / 2));
+		return glm::vec2(ofGetWidth() - offsettedPosition.x, offsettedPosition.y);
+	}
+
+	void update(glm::vec2 topLeft, glm::vec2 topRight, glm::vec2 bottomRight, glm::vec2 bottomLeft, bool gauss = false)
+	{
+		filterGauss();
+		mesh.clear();
+		clusterMesh.clear();
+
+		float searchRadius = 3.0f;
+
+		std::vector<glm::vec2> validPoints;
+		for (int i = 0; i < filteredCoordinates.size(); i++)
+		{
+			glm::vec2 deviceCoordinate = scaleToDeviceCoordinate(filteredCoordinates[i]);
+			const bool isPointInside = isPointInRectangle(deviceCoordinate, topLeft, topRight, bottomRight, bottomLeft);
+			if (!isPointInside)
+			{
+				continue;
+			}
+
+			validPoints.push_back(glm::vec3(deviceCoordinate.x, deviceCoordinate.y, 0.0));
+			mesh.addVertex(glm::vec3(deviceCoordinate.x, deviceCoordinate.y, 0.0));
+			mesh.addColor(ofColor(255, 255, isPointInside ? 255 : 0));
+			// validPoints.push_back(deviceCoordinate);
+		}
+		if (validPoints.size() > 300) {
+			return;
+		}
+		std::vector<std::vector<glm::vec2>> clusters = clusterPoints(validPoints, searchRadius);
+
+
+		for (const auto& cluster : clusters)
+		{
+			std::cout << cluster.size() << std::endl;
+			if (cluster.size() < 6) {
+				continue;
+			}
+
+		for (const auto& point : cluster)
+			{
+				clusterMesh.addVertex(glm::vec3(point, 1.0));
+				clusterMesh.addColor(ofColor(0,0,255));
+
+			}
+		}
+		std::cout << "momo" << std::endl;
+
+
+
+
+		// Gaussian�J�[�l���̐���
 
 		// float searchRadius = 1.0f; // ���a1.0�ŃN���X�^�����O
-		// std::vector<std::vector<glm::vec2>> clusters = clusterPoints(filteredCoordinates, searchRadius);
 
 		//// �N���X�^�����O���ʂ̕\��
-		// for (const auto& cluster : clusters) {
-		//	std::cout << "Cluster:\n";
-		//	for (const auto& point : cluster) {
-		//		std::cout << "(" << point.x << ", " << point.y << ")\n";
-		//	}
-		//	std::cout << std::endl;
-		// }
 
 		for (int i = 0; i < coordinates.size(); ++i)
 		{
-			glm::vec3 scaledPosition;
-			if (gauss)
-			{
-				scaledPosition = glm::vec3(filteredCoordinates.at(i).x, filteredCoordinates.at(i).y, 0.0) * scale;
-			}
-			else
-			{
-
-				scaledPosition = glm::vec3(coordinates.at(i).x, coordinates.at(i).y, 1.0) * scale;
-			}
-
-			glm::vec3 ofsettedPosition = glm::vec3(scaledPosition.x + (ofGetWidth() / 2), scaledPosition.y + (ofGetHeight() / 2), 0.0);
-
-			mesh.addVertex(ofsettedPosition);
 		}
-		condition.notify_all();
 	}
 
 	void update(glm::vec2 thresh, cv::Mat mat)
 	{
-		std::unique_lock<std::mutex> lock(mutex);
+		filterGauss();
+
 		mesh.clear();
 
 		for (int i = 0; i < coordinates.size(); ++i)
 		{
 			glm::vec3 scaledPosition = glm::vec3(coordinates.at(i).x, coordinates.at(i).y, 1.0) * scale;
-
-			glm::vec3 ofsettedPosition = glm::vec3(scaledPosition.x + (ofGetWidth() / 2), scaledPosition.y + (ofGetHeight() / 2), 0.0);
-			cv::Mat urgPosMat = (cv::Mat_<double>(3, 1) << (double)ofsettedPosition.x, (double)ofsettedPosition.y, 1.0);
-
+			// XXX
+			glm::vec3 offsettedPosition = glm::vec3(scaledPosition.x + (ofGetWidth() / 2), scaledPosition.y + (ofGetHeight() / 2), 0.0);
+			cv::Mat urgPosMat = (cv::Mat_<double>(3, 1) << (double)offsettedPosition.x, (double)offsettedPosition.y, 1.0);
 			cv::Mat unityPosMat = mat * urgPosMat;
 
 			mesh.addVertex(glm::vec3((unityPosMat.at<double>(0)), unityPosMat.at<double>(1), 0.0));
 		}
-		condition.notify_all();
-	}
-	void updateWithMat()
-	{
 	}
 
 	void draw()
@@ -123,7 +153,9 @@ public:
 		{
 			ofSetColor(120);
 			mesh.draw();
+			clusterMesh.draw();
 		}
+		drawDebugInfo();
 	}
 
 	void drawDebugInfo()
@@ -245,10 +277,54 @@ public:
 		return clusters;
 	}
 
+	// ベクトルのクロスプロダクトを計算
+	float crossProduct(const glm::vec2 &a, const glm::vec2 &b)
+	{
+		return a.x * b.y - a.y * b.x;
+	}
+
+	// 点が矩形の内側にあるかを判定
+	bool isPointInRectangle(const glm::vec2 &p, const glm::vec2 &topLeft, const glm::vec2 &topRight, const glm::vec2 &bottomRight, const glm::vec2 &bottomLeft)
+	{
+		std::vector<glm::vec2> rect = {topLeft, topRight, bottomRight, bottomLeft};
+
+		for (size_t i = 0; i < 4; ++i)
+		{
+			glm::vec2 v1 = rect[i];
+			glm::vec2 v2 = rect[(i + 1) % 4];
+			glm::vec2 edge = v2 - v1;
+			glm::vec2 vp = p - v1;
+
+			if (crossProduct(edge, vp) < 0)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	// 矩形の内側にある点をフィルタリング
+	std::vector<glm::vec2> filterPointsInsideRectangle(const std::vector<glm::vec2> &points, const glm::vec2 &topLeft, const glm::vec2 &topRight, const glm::vec2 &bottomRight, const glm::vec2 &bottomLeft)
+	{
+		std::vector<glm::vec2> filteredPoints;
+
+		for (const auto &point : points)
+		{
+			if (isPointInRectangle(point, topLeft, topRight, bottomRight, bottomLeft))
+			{
+				filteredPoints.push_back(point);
+			}
+		}
+
+		return filteredPoints;
+	}
+
 private:
 	std::unique_ptr<ofxUST> ust;
 	float scale = 0.15;
 	ofVboMesh mesh;
+	ofVboMesh clusterMesh;
+
 	std::vector<glm::vec2> coordinates;
 	std::vector<glm::vec2> filteredCoordinates;
 	std::vector<float> distances;
