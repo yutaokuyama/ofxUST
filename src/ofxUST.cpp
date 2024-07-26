@@ -10,28 +10,28 @@ ofxUST::ofxUST(std::string deviceIp, int port, float checkInterval)
 
 // open
 //----------------------------------------
-void ofxUST::open()
+bool ofxUST::open()
 {
   bConnected = urg.open(deviceIp.c_str(), port, Urg_driver::Ethernet);
 
-  if (bConnected)
-  {
-    ofLog() << "[ofxUST::open] succeeded" << std::endl
-            << "  info" << std::endl
-            << "    product_type     : " << urg.product_type() << std::endl
-            << "    firmware_version : " << urg.firmware_version() << std::endl
-            << "    serial_id        : " << urg.serial_id() << std::endl
-            << "    status           : " << urg.status() << std::endl
-            << "    state            : " << urg.state() << std::endl
-            << "    min_distance     : " << urg.min_distance() << std::endl
-            << "    max_distance     : " << urg.max_distance() << std::endl
-            << "    min_step         : " << urg.min_step() << std::endl
-            << "    max_step         : " << urg.max_step();
-  }
-  else
+  if (!bConnected)
   {
     ofLog() << "[ofxUST::open] failed";
+    return bConnected;
   }
+
+  ofLog() << "[ofxUST::open] succeeded" << std::endl
+          << "  info" << std::endl
+          << "    product_type     : " << urg.product_type() << std::endl
+          << "    firmware_version : " << urg.firmware_version() << std::endl
+          << "    serial_id        : " << urg.serial_id() << std::endl
+          << "    status           : " << urg.status() << std::endl
+          << "    state            : " << urg.state() << std::endl
+          << "    min_distance     : " << urg.min_distance() << std::endl
+          << "    max_distance     : " << urg.max_distance() << std::endl
+          << "    min_step         : " << urg.min_step() << std::endl
+          << "    max_step         : " << urg.max_step();
+  return bConnected;
 }
 
 // setDirection
@@ -176,6 +176,7 @@ void ofxUST::update()
   size_t nData = data.size();
 
   coordinates.clear();
+  distances.clear();
 
   for (size_t i = 0; i < nData; i += skip)
   {
@@ -190,13 +191,19 @@ void ofxUST::update()
     long x = (long)(cos(radian) * l);
     long y = (long)(sin(radian) * l);
 
-    coordinates.push_back(ofVec2f(x, y));
+    coordinates.push_back(glm::vec2(x, y));
+    distances.push_back(l);
   }
 }
 
-const std::vector<ofVec2f> &ofxUST::getCoordinates()
+const std::vector<glm::vec2> &ofxUST::getCoordinates()
 {
   return coordinates;
+}
+
+const std::vector<float> &ofxUST::getDistances()
+{
+  return distances;
 }
 
 // close

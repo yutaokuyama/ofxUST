@@ -16,8 +16,9 @@ public:
 	void setup()
 	{
 		ust = std::make_unique<ofxUST>("192.168.1.20");
-		bool isConnectionFailed = !(ust->open());
 
+
+		bool isConnectionFailed = !(ust->open());
 		if (isConnectionFailed)
 		{
 			ofLog() << "Connection failed!";

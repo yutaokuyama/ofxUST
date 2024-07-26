@@ -10,7 +10,7 @@ using namespace qrk;
 class ofxUST
 {
 public:
-    ofxUST(std::string deviceIp = "192.168.0.10", int port = 10940,float checkInterval = 1.0);
+    ofxUST(std::string deviceIp = "192.168.0.10", int port = 10940, float checkInterval = 1.0);
 
     enum Direction
     {
@@ -21,7 +21,7 @@ public:
         DIRECTION_SIZE
     };
 
-    void open();
+    bool open();
 
     void setDirection(Direction _dir);
     void setMirror(bool _b);
@@ -46,17 +46,16 @@ public:
 
     void close();
 
-    const std::vector<ofVec2f>& getCoordinates();
-
-
-
+    const std::vector<glm::vec2> &getCoordinates();
+    const std::vector<float> &getDistances();
 
 private:
     Urg_driver urg;
     bool bConnected;
-    std::vector<ofVec2f> coordinates;
-    std::vector<long> data;
+    std::vector<glm::vec2> coordinates;
+    std::vector<float> distances;
 
+    std::vector<long> data;
 
     int minStep, maxStep;
     float minAngle, maxAngle;
@@ -70,5 +69,4 @@ private:
     const string deviceIp;
     const int port;
     float lastCheckTime = 0.0;
-    
 };

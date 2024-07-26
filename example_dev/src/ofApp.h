@@ -46,6 +46,10 @@ private:
 
 
 		srcAnchors = std::vector<ofVec2f>(4);
+		srcAnchors[AnchorID::TOP_LEFT] = ofVec2f(0.0, 0.0);
+		srcAnchors[AnchorID::TOP_RIGHT] = ofVec2f(ofGetWidth(), 0.0);
+		srcAnchors[AnchorID::BOTTOM_LEFT] = ofVec2f(0.0, ofGetHeight());
+		srcAnchors[AnchorID::BOTTOM_RIGHT] = ofVec2f(ofGetWidth(), ofGetHeight());
 	}
 
 	void moveSrcAnchor();

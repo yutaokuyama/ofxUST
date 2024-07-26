@@ -13,7 +13,6 @@ void ofApp::setup()
 	initializeAnchors();
 
 	left.load("GLvPlPVaIAAlchb.jfif");
-	ofxCv::imitate(warpedColor, left);
 	guiSetup();
 
 }
@@ -34,21 +33,16 @@ void ofApp::guiSetup() {
 //----------------------------------------
 void ofApp::update()
 {
-
+	threadedObject.getCoordinate();
 
 	vector<cv::Point2f> srcPoints, dstPoints;
 	for (int i = 0; i < 4; i++) {
 		srcPoints.push_back(cv::Point2f(srcAnchors[i].x, srcAnchors[i].y));
 		dstPoints.push_back(cv::Point2f(dstAnchors[i].x, dstAnchors[i].y));
 	}
-	homography = cv::getPerspectiveTransform(cv::Mat(srcPoints), cv::Mat(dstPoints));
+	homography = findHomography(cv::Mat(srcPoints), cv::Mat(dstPoints));
 
-	if (isCalib) {
-		threadedObject.update(glm::vec2(thresh),gauss);
-	}
-	else {
-		threadedObject.update(glm::vec2(thresh),homography);
-	}
+	threadedObject.update(isCalib,homography, srcAnchors[TOP_LEFT], srcAnchors[TOP_RIGHT], srcAnchors[BOTTOM_RIGHT], srcAnchors[BOTTOM_LEFT]);
 
 
 
