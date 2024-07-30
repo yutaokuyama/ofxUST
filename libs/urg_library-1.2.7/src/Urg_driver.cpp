@@ -247,7 +247,7 @@ bool Urg_driver::get_distance_io(std::vector<long>& data, std::vector<long>& io,
 		return false;
 	}
 
-	// Å‘åƒTƒCƒY‚ğŠm•Û‚µA‚»‚±‚Éƒf[ƒ^‚ğŠi”[‚·‚é
+	// ï¿½Å‘ï¿½Tï¿½Cï¿½Yï¿½ï¿½ï¿½mï¿½Û‚ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½Éƒfï¿½[ï¿½^ï¿½ï¿½ï¿½iï¿½[ï¿½ï¿½ï¿½ï¿½
 	data.resize(max_data_size());
 	io.resize(max_io_size());
 	int ret = urg_get_distance_io(&pimpl->urg_, &data[0], &io[0], time_stamp);
@@ -268,7 +268,7 @@ bool Urg_driver::get_distance_intensity_io(std::vector<long>& data,
 		return false;
 	}
 
-	// Å‘åƒTƒCƒY‚ğŠm•Û‚µA‚»‚±‚Éƒf[ƒ^‚ğŠi”[‚·‚é
+	// ï¿½Å‘ï¿½Tï¿½Cï¿½Yï¿½ï¿½ï¿½mï¿½Û‚ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½Éƒfï¿½[ï¿½^ï¿½ï¿½ï¿½iï¿½[ï¿½ï¿½ï¿½ï¿½
 	size_t data_size = max_data_size();
 	data.resize(data_size);
 	intensity.resize(data_size);
