@@ -69,6 +69,20 @@ namespace UST
 			return glm::length(p1 - p2);
 		}
 
+
+		// 点が指定された範囲内にあるかをチェックする関数
+		static bool isPointInRange(const glm::vec2& point, const glm::vec4& range) {
+			//std::cout << "x: "<< range.x << "w: " << range.z << std::endl;
+			//std::cout << "(point.x >= range.x) "<<(point.x >= range.x) << std::endl;
+			//std::cout << " point.x <= range.x + range.z  " << (point.x)<<"asd" << range.x + range.z <<(point.x <= range.x + range.z )<< std::endl;
+			//std::cout << "point.y >= range.y  " << (point.y >= range.y )<< std::endl;
+			//std::cout << "  point.y <= range.y + range.w " << (point.y <= range.y + range.w)<< std::endl;
+			return (point.x >= range.x && point.x <= range.x + range.z &&
+				point.y >= range.y && point.y <= range.y + range.w);
+		}
+
+
+
 		// ベクトルのクロスプロダクトを計算
 		static const float crossProduct(const glm::vec2 &a, const glm::vec2 &b)
 		{
@@ -115,6 +129,69 @@ namespace UST
 			return clusters;
 		}
 
+		static std::vector<std::vector<glm::vec2>> clusterPointsWithRange(const std::vector<glm::vec2>& points,const glm::vec4& xywh, float radius)
+		{
+			std::vector<bool> visited(points.size(), false);
+			std::vector<std::vector<glm::vec2>> clusters;
+
+			for (size_t i = 0; i < points.size(); ++i)
+			{
+
+				if (visited[i] || !isPointInRange(points[i], glm::vec4(ofGetWidth() * (xywh.x), 0.0, xywh.z * ofGetWidth(), ofGetHeight()))) {
+					continue;
+				}
+				std::vector<glm::vec2> cluster;
+				std::vector<size_t> toVisit;
+				toVisit.push_back(i);
+
+				while (!toVisit.empty())
+				{
+					size_t index = toVisit.back();
+					toVisit.pop_back();
+					if (visited[index])
+						continue;
+
+					visited[index] = true;
+					cluster.push_back(points[index]);
+
+					// ���a���̋ߖT�_��T��
+					for (size_t j = 0; j < points.size(); ++j)
+					{
+						if (!visited[j] && calculateDistance(points[index], points[j]) <= radius)
+						{
+							toVisit.push_back(j);
+						}
+					}
+				}
+
+				clusters.push_back(cluster);
+			}
+
+			return clusters;
+		}
+
+
+		static glm::vec2 projectPoint(const cv::Mat& homography, const glm::vec2& point) {
+
+				const cv::Mat originalPos = (cv::Mat_<double>(3, 1) << (double)point.x, (double)point.y, 1.0);
+				const cv::Mat projectedPoint = homography * originalPos;
+				const glm::vec2 translatedPoint(projectedPoint.at<double>(0), projectedPoint.at<double>(1));
+			
+			return translatedPoint;
+		}
+
+		static std::vector<glm::vec2> projectPoints(cv::Mat& homography ,const std::vector<glm::vec2>& points){
+			
+				std::vector<glm::vec2> projectedPoints;
+				for (auto point :points){
+					const cv::Mat originalPos = (cv::Mat_<double>(3, 1) << (double)point.x, (double)point.y, 1.0);
+					const cv::Mat projectedPoint = homography * originalPos;
+					const glm::vec2 translatedPoint(projectedPoint.at<double>(0), projectedPoint.at<double>(1));
+					projectedPoints.push_back(translatedPoint);
+				}
+				return projectedPoints;
+		}
+
 		// 点が矩形の内側にあるかを判定
 		static bool isPointInRectangle(const glm::vec2 &p, const glm::vec2 &topLeft, const glm::vec2 &topRight, const glm::vec2 &bottomRight, const glm::vec2 &bottomLeft)
 		{
@@ -134,6 +211,35 @@ namespace UST
 			}
 			return true;
 		}
+
+
+		// クラスタの平均点をマージする関数
+		static const std::vector<glm::vec2> mergeClusters(const std::vector<glm::vec2>& clusterMeans, float threshold) {
+			std::vector<glm::vec2> mergedClusters;
+			std::vector<bool> merged(clusterMeans.size(), false);
+
+			for (size_t i = 0; i < clusterMeans.size(); ++i) {
+				if (merged[i]) continue;
+
+				glm::vec2 sum = clusterMeans[i];
+				int count = 1;
+				merged[i] = true;
+
+				for (size_t j = i + 1; j < clusterMeans.size(); ++j) {
+					if (!merged[j] && calculateDistance(clusterMeans[i], clusterMeans[j]) <= threshold) {
+						sum += clusterMeans[j];
+						count++;
+						merged[j] = true;
+					}
+				}
+
+				mergedClusters.push_back(sum / static_cast<float>(count));
+			}
+
+			return mergedClusters;
+		}
+
+
 
 		// 矩形の内側にある点をフィルタリング
 		static std::vector<glm::vec2> filterPointsInsideRectangle(const std::vector<glm::vec2> &points, const glm::vec2 &topLeft, const glm::vec2 &topRight, const glm::vec2 &bottomRight, const glm::vec2 &bottomLeft)
