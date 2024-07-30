@@ -7,7 +7,7 @@
 void ofApp::setup()
 {
 	ofBackground(0);
-	ofSetVerticalSync(true);
+	ofSetVerticalSync(false);
 
 	threadedObject.setup();
 	initializeAnchors();
@@ -33,7 +33,6 @@ void ofApp::guiSetup() {
 //----------------------------------------
 void ofApp::update()
 {
-	threadedObject.getCoordinate();
 
 	vector<cv::Point2f> srcPoints, dstPoints;
 	for (int i = 0; i < 4; i++) {
