@@ -101,6 +101,7 @@ void ofxUST::setScanningParameterBySteps(int _minStep, int _maxStep, int _skipSt
   if (bConnected)
   {
     urg.set_scanning_parameter(_minStep, _maxStep, _skipStep);
+    urg.set_ignore_checkSumError(true);
   }
 }
 
