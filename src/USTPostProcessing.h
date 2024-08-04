@@ -129,6 +129,28 @@ namespace UST
 			return clusters;
 		}
 
+		static glm::vec2 calculateClusterMedian(const std::vector<glm::vec2>& cluster) {
+			if (cluster.empty()) {
+				throw std::runtime_error("Cluster is empty");
+			}
+
+			std::vector<float> xValues, yValues;
+			for (const auto& point : cluster) {
+				xValues.push_back(point.x);
+				yValues.push_back(point.y);
+			}
+
+			std::sort(xValues.begin(), xValues.end());
+			std::sort(yValues.begin(), yValues.end());
+
+			size_t midIndex = xValues.size() / 2;
+			float medianX = xValues[midIndex];
+			float medianY = yValues[midIndex];
+
+			return glm::vec2(medianX, medianY);
+		}
+
+
 		static std::vector<std::vector<glm::vec2>> clusterPointsWithRange(const std::vector<glm::vec2>& points,const glm::vec4& xywh, float radius)
 		{
 			std::vector<bool> visited(points.size(), false);
@@ -239,6 +261,35 @@ namespace UST
 			return mergedClusters;
 		}
 
+		static std::vector<glm::vec2> mergeClustersWithMedian(const std::vector<std::vector<glm::vec2>>& clusters, float threshold, size_t minClusterSize) {
+			std::vector<glm::vec2> mergedClusters;
+			std::vector<bool> merged(clusters.size(), false);
+
+			for (size_t i = 0; i < clusters.size(); ++i) {
+				if (merged[i] || clusters[i].size() < minClusterSize || clusters[i].empty()) continue;
+
+				glm::vec2 median = calculateClusterMedian(clusters[i]);
+				std::vector<glm::vec2> toMerge = { median };
+				merged[i] = true;
+
+				for (size_t j = i + 1; j < clusters.size(); ++j) {
+					if (!merged[j] && clusters[j].size() >= minClusterSize && !clusters[j].empty()) {
+						glm::vec2 otherMedian = calculateClusterMedian(clusters[j]);
+						if (calculateDistance(median, otherMedian) <= threshold) {
+							toMerge.push_back(otherMedian);
+							merged[j] = true;
+						}
+					}
+				}
+
+				// 新しいクラスタの代表点として、中央値の中央値を計算
+				mergedClusters.push_back(calculateClusterMedian(toMerge));
+			}
+
+			return mergedClusters;
+		}
+
+
 
 
 		// 矩形の内側にある点をフィルタリング
@@ -262,6 +313,34 @@ namespace UST
 			glm::vec2 scaledPosition = glm::vec2(coordinates.x, coordinates.y) * scale;
 			glm::vec2 offsettedPosition = glm::vec2(scaledPosition.x + (ofGetWidth() / 2), scaledPosition.y + (ofGetHeight() / 2));
 			return glm::vec2(ofGetWidth() - offsettedPosition.x, offsettedPosition.y);
+		}
+
+		// クラスタをID付けして返す関数
+		static std::vector<std::pair<int, glm::vec2>> assignClusterIDs(std::vector<glm::vec2>& clusterMedians) {
+			// X座標でソート
+			std::sort(clusterMedians.begin(), clusterMedians.end(), [](const glm::vec2& a, const glm::vec2& b) {
+				return a.x < b.x;
+				});
+
+			// IDを付与
+			std::vector<std::pair<int, glm::vec2>> clustersWithIDs;
+			for (size_t i = 0; i < clusterMedians.size(); ++i) {
+				clustersWithIDs.push_back({ static_cast<int>(i), clusterMedians[i] });
+			}
+
+			return clustersWithIDs;
+		}
+
+		// クラスタの代表点をX座標でソートして返す関数
+		static std::vector<glm::vec2> sortClustersByX(const std::vector<glm::vec2>& clusterMedians) {
+			std::vector<glm::vec2> sortedClusters = clusterMedians;
+
+			// X座標でソート
+			std::sort(sortedClusters.begin(), sortedClusters.end(), [](const glm::vec2& a, const glm::vec2& b) {
+				return a.x < b.x;
+				});
+
+			return sortedClusters;
 		}
 	};
 };
