@@ -66,6 +66,8 @@ namespace UST
 
 		static const float calculateDistance(const glm::vec2 &p1, const glm::vec2 &p2)
 		{
+			//std::cout <<"p1: " << p1 << "p2:"<<p2 << std::endl;
+
 			return glm::length(p1 - p2);
 		}
 
@@ -284,6 +286,110 @@ namespace UST
 
 				// 新しいクラスタの代表点として、中央値の中央値を計算
 				mergedClusters.push_back(calculateClusterMedian(toMerge));
+			}
+
+			return mergedClusters;
+		}
+
+
+
+
+
+		// 特定の点が除外対象の領域内にあるかをチェックする関数
+		static bool isPointInExclusionZones(const glm::vec2& point, const std::vector<glm::vec2>& exclusionCenters, float exclusionRadius) {
+			for (const auto& center : exclusionCenters) {
+				const float dist = calculateDistance(point, center);
+				if (dist <= exclusionRadius) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		// 中央値を用いたクラスタの代表点を計算する関数
+		static glm::vec2 calculateClusterMedian(const std::vector<glm::vec2>& cluster, const std::vector<glm::vec2>& exclusionCenters, float exclusionRadius) {
+			std::vector<float> xValues, yValues;
+
+			// クラスタ内の各点に対して、除外領域に含まれる点を無視
+			for (const auto& point : cluster) {
+				if (!isPointInExclusionZones(point, exclusionCenters, exclusionRadius)) {
+					xValues.push_back(point.x);
+					yValues.push_back(point.y);
+				}
+			}
+
+			if (xValues.empty() || yValues.empty()) {
+				throw std::runtime_error("No valid points in cluster to calculate median");
+			}
+
+			std::sort(xValues.begin(), xValues.end());
+			std::sort(yValues.begin(), yValues.end());
+
+			size_t midIndex = xValues.size() / 2;
+			float medianX = xValues[midIndex];
+			float medianY = yValues[midIndex];
+
+			return glm::vec2(medianX, medianY);
+		}
+
+		// 最近傍検索を用いた点のグループ化
+		static std::vector<std::vector<glm::vec2>> clusterPointss(const std::vector<glm::vec2>& points, float radius, const std::vector<glm::vec2>& exclusionCenters, float exclusionRadius) {
+			std::vector<bool> visited(points.size(), false);
+			std::vector<std::vector<glm::vec2>> clusters;
+
+			for (size_t i = 0; i < points.size(); ++i) {
+				if (visited[i] || isPointInExclusionZones(points[i], exclusionCenters, exclusionRadius)) continue;
+
+				std::vector<glm::vec2> cluster;
+				std::vector<size_t> toVisit;
+				toVisit.push_back(i);
+
+				while (!toVisit.empty()) {
+					size_t index = toVisit.back();
+					toVisit.pop_back();
+					if (visited[index] || isPointInExclusionZones(points[index], exclusionCenters, exclusionRadius)) continue;
+
+					visited[index] = true;
+					cluster.push_back(points[index]);
+
+					// 半径内の近傍点を探索
+					for (size_t j = 0; j < points.size(); ++j) {
+						if (!visited[j] && !isPointInExclusionZones(points[j], exclusionCenters, exclusionRadius) && calculateDistance(points[index], points[j]) <= radius) {
+							toVisit.push_back(j);
+						}
+					}
+				}
+
+				clusters.push_back(cluster);
+			}
+
+			return clusters;
+		}
+
+		// クラスタの中央値をマージする関数（最小サイズの条件付き）
+		static std::vector<glm::vec2> mergeClustersWithMedian(const std::vector<std::vector<glm::vec2>>& clusters, float threshold, size_t minClusterSize, const std::vector<glm::vec2>& exclusionCenters, float exclusionRadius) {
+			std::vector<glm::vec2> mergedClusters;
+			std::vector<bool> merged(clusters.size(), false);
+
+			for (size_t i = 0; i < clusters.size(); ++i) {
+				if (merged[i] || clusters[i].size() < minClusterSize || clusters[i].empty()) continue;
+
+				glm::vec2 median = calculateClusterMedian(clusters[i], exclusionCenters, exclusionRadius);
+				std::vector<glm::vec2> toMerge = { median };
+				merged[i] = true;
+
+				for (size_t j = i + 1; j < clusters.size(); ++j) {
+					if (!merged[j] && clusters[j].size() >= minClusterSize && !clusters[j].empty()) {
+						glm::vec2 otherMedian = calculateClusterMedian(clusters[j], exclusionCenters, exclusionRadius);
+						if (calculateDistance(median, otherMedian) <= threshold) {
+							toMerge.push_back(otherMedian);
+							merged[j] = true;
+						}
+					}
+				}
+
+				// 新しいクラスタの代表点として、中央値の中央値を計算
+				mergedClusters.push_back(calculateClusterMedian(toMerge, {}, 0.0f)); // 除外領域はなしで計算
 			}
 
 			return mergedClusters;
