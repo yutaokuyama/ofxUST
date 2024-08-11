@@ -185,8 +185,8 @@ void ofxUST::update()
 
     long l = data.at(i);
 
-    if ((l < min_distance) || (l > max_distance))
-      continue;
+    // if ((l < min_distance) || (l > max_distance))
+    //   continue;
 
     double radian = urg.index2rad(idx) + ((int)direction * HALF_PI);
     long x = (long)(cos(radian) * l);
